@@ -19,9 +19,18 @@ class UserController extends Controller
         );
     }
 
-    public function show(User $user)
+    public function show($id)
     {
-        return response()->json($user);
+        try {
+            $user = User::findorfail($id);
+            return response()->success(
+                $user,
+                'User detail',
+                200
+            );
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->error('User not found', 404);
+        }return response()->json($user);
     }
 
     public function store(UserRequest $request)

@@ -35,13 +35,16 @@ class ProjectController extends Controller
         return response()->success($projects, 'Projects retrieved successfully', 200);
     }
 
-    public function show(Project $project)
+    public function show($id)
     {
-        $project = new ProjectResource($project);
-        if ($project->resource === null) {
+        try {
+            $project = Project::findOrFail($id); // Manually fetch project
+
+            $project = new ProjectResource($project);
+            return response()->success($project, 'Project Detail', 200);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             return response()->error('Project not found', 404);
         }
-        return response()->success($project, 'Project Detail', 200);
     }
 
     public function store(CreateRequest $request)
@@ -80,17 +83,18 @@ class ProjectController extends Controller
 
     public function destroy($id)
     {
-        $project = Project::find($id);
-        if ($project === null) {
+        try {
+            $project = Project::findorfail($id);
+
+            // Delete associated attribute values first
+            $project->attributeValues()->delete();
+
+            // Now delete the project
+            $project->delete();
+
+            return response()->success([], 'Project deleted successfully', 200);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             return response()->error('Project not found', 404);
         }
-
-        // Delete associated attribute values first
-        $project->attributeValues()->delete();
-
-        // Now delete the project
-        $project->delete();
-
-        return response()->success([], 'Project deleted successfully', 200);
     }
 }
